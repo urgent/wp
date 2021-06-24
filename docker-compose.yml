@@ -1,0 +1,60 @@
+version: "3.3"
+
+networks:
+  # Allow the use of traefik in other docker-compose.yml files
+  traefik:
+    external: true
+  # network for the app
+  backend:
+
+services:
+  traefik:
+    image: "traefik:v2.4"
+    container_name: "traefik-slt"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    networks:
+      - "traefik"
+    volumes:
+      # Store certificates in ./letsencrypt/acme.json
+      - "./letsencrypt:/letsencrypt"
+      # Connect to Doker socket
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  wordpress:
+    build:
+      # call the Dockerfile in ./wordpress
+      context: ./wordpress
+    restart: always
+    volumes:
+      # save the content of WordPress an enable local modifications
+      - ./wordpress/data:/var/www/html
+    networks:
+      - traefik
+      - backend
+    depends_on:
+      - db
+      - redis
+
+  db:
+    # this is the database used by Wordpress
+    image: mysql:5.7
+    restart: always
+    volumes:
+      # Persist the database on disk
+      - ./db:/var/lib/mysql
+    networks:
+      - backend
+
+  redis:
+    image: redis:6
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+    # launch Redis in cache mode with :
+    #  - max memory up to 50% of your RAM if needed (--maxmemory 512mb)
+    #  - deleting oldest data when max memory is reached (--maxmemory-policy allkeys-lru)
+    entrypoint: redis-server
