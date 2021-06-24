@@ -37,16 +37,6 @@ services:
       - db
       - redis
 
-  db:
-    # this is the database used by Wordpress
-    image: mysql:5.7
-    restart: always
-    volumes:
-      # Persist the database on disk
-      - ./db:/var/lib/mysql
-    networks:
-      - backend
-
   redis:
     image: redis:6
     restart: always

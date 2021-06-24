@@ -27,6 +27,14 @@ services:
       - "traefik.http.routers.wordpresscp.entrypoints=web"
 
   db:
+    # this is the database used by Wordpress
+    image: mysql:5.7
+    restart: always
+    volumes:
+      # Persist the database on disk
+      - ./db:/var/lib/mysql
+    networks:
+      - backend
     environment:
       # Connect WordPrerss to the database
       MYSQL_DATABASE: wordpressdb
